@@ -496,7 +496,7 @@ func (lr *LockResolver) resolveLocks(bo *retry.Backoffer, opts ResolveLocksOptio
 		} else {
 			if forRead {
 				asyncCtx := context.WithValue(lr.asyncResolveCtx, util.RequestSourceKey, bo.GetCtx().Value(util.RequestSourceKey))
-				asyncBo := retry.NewBackoffer(asyncCtx, asyncResolveLockMaxBackoff)
+				asyncBo := retry.NewBackoffer(asyncCtx, asyncResolveLockMaxBackoff) // 40000
 				go func() {
 					// Pass an empty cleanRegions here to avoid data race and
 					// let `reqCollapse` deduplicate identical resolve requests.
@@ -609,7 +609,7 @@ func (t *txnExpireTime) value() int64 {
 // seconds before calling it after Prewrite.
 func (lr *LockResolver) GetTxnStatus(txnID uint64, callerStartTS uint64, primary []byte) (TxnStatus, error) {
 	var status TxnStatus
-	bo := retry.NewBackoffer(context.Background(), getTxnStatusMaxBackoff)
+	bo := retry.NewBackoffer(context.Background(), getTxnStatusMaxBackoff) // 20000
 	currentTS, err := lr.store.GetOracle().GetLowResolutionTimestamp(bo.GetCtx(), &oracle.Option{TxnScope: oracle.GlobalTxnScope})
 	if err != nil {
 		return status, err
@@ -979,7 +979,7 @@ func (lr *LockResolver) resolveAsyncCommitLock(bo *retry.Backoffer, l *Lock, sta
 
 	logutil.BgLogger().Info("resolve async commit", zap.Uint64("startTS", l.TxnID), zap.Uint64("commitTS", status.commitTS))
 	if asyncResolveAll {
-		asyncBo := retry.NewBackoffer(lr.asyncResolveCtx, asyncResolveLockMaxBackoff)
+		asyncBo := retry.NewBackoffer(lr.asyncResolveCtx, asyncResolveLockMaxBackoff) // 40000
 		go func() {
 			err := lr.resolveAsyncResolveData(asyncBo, l, status, resolveData)
 			if err != nil {

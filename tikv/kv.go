@@ -287,7 +287,7 @@ func (s *KVStore) Begin(opts ...TxnOption) (txn *transaction.KVTxn, err error) {
 	if options.StartTS != nil {
 		startTS = *options.StartTS
 	} else {
-		bo := retry.NewBackofferWithVars(context.Background(), transaction.TsoMaxBackoff, nil)
+		bo := retry.NewBackofferWithVars(context.Background(), transaction.TsoMaxBackoff, nil) // 15000
 		startTS, err = s.getTimestampWithRetry(bo, options.TxnScope)
 		if err != nil {
 			return nil, err
@@ -354,7 +354,7 @@ func (s *KVStore) UUID() string {
 
 // CurrentTimestamp returns current timestamp with the given txnScope (local or global).
 func (s *KVStore) CurrentTimestamp(txnScope string) (uint64, error) {
-	bo := retry.NewBackofferWithVars(context.Background(), transaction.TsoMaxBackoff, nil)
+	bo := retry.NewBackofferWithVars(context.Background(), transaction.TsoMaxBackoff, nil) // 15000
 	startTS, err := s.getTimestampWithRetry(bo, txnScope)
 	if err != nil {
 		return 0, err

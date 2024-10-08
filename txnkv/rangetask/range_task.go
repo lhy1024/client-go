@@ -117,7 +117,7 @@ const locateRegionMaxBackoff = 20000
 
 // NewLocateRegionBackoffer creates the backoofer for LocateRegion request.
 func NewLocateRegionBackoffer(ctx context.Context) *retry.Backoffer {
-	return retry.NewBackofferWithVars(ctx, locateRegionMaxBackoff, nil)
+	return retry.NewBackofferWithVars(ctx, locateRegionMaxBackoff, nil) // 20000
 }
 
 // RunOnRange runs the task on the given range.

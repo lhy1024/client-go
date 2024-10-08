@@ -127,7 +127,7 @@ func (t *DeleteRangeTask) sendReqOnRange(ctx context.Context, r kv.KeyRange) (Ta
 			break
 		}
 
-		bo := retry.NewBackofferWithVars(ctx, deleteRangeOneRegionMaxBackoff, nil)
+		bo := retry.NewBackofferWithVars(ctx, deleteRangeOneRegionMaxBackoff, nil) // 100000
 		loc, err := t.store.GetRegionCache().LocateKey(bo, startKey)
 		if err != nil {
 			return stat, err

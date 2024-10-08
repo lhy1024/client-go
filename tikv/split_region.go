@@ -279,7 +279,7 @@ func (s *KVStore) WaitScatterRegionFinish(ctx context.Context, regionID uint64, 
 	logutil.BgLogger().Info("wait scatter region",
 		zap.Uint64("regionID", regionID), zap.Int("backoff(ms)", backOff))
 
-	bo := retry.NewBackofferWithVars(ctx, backOff, nil)
+	bo := retry.NewBackofferWithVars(ctx, backOff, nil) // 120000
 	logFreq := 0
 	for {
 		resp, err := s.pdClient.GetOperator(ctx, regionID)

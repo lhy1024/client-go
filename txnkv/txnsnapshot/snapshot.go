@@ -218,7 +218,7 @@ func (s *KVSnapshot) BatchGet(ctx context.Context, keys [][]byte) (map[string][]
 	if ctx.Value(util.RequestSourceKey) == nil {
 		ctx = context.WithValue(ctx, util.RequestSourceKey, *s.RequestSource)
 	}
-	bo := retry.NewBackofferWithVars(ctx, batchGetMaxBackoff, s.vars)
+	bo := retry.NewBackofferWithVars(ctx, batchGetMaxBackoff, s.vars) // 20000
 	s.mu.RLock()
 	if s.mu.interceptor != nil {
 		// User has called snapshot.SetRPCInterceptor() to explicitly set an interceptor, we
@@ -522,7 +522,7 @@ func (s *KVSnapshot) Get(ctx context.Context, k []byte) ([]byte, error) {
 	if ctx.Value(util.RequestSourceKey) == nil {
 		ctx = context.WithValue(ctx, util.RequestSourceKey, *s.RequestSource)
 	}
-	bo := retry.NewBackofferWithVars(ctx, getMaxBackoff, s.vars)
+	bo := retry.NewBackofferWithVars(ctx, getMaxBackoff, s.vars) // 20000
 	s.mu.RLock()
 	if s.mu.interceptor != nil {
 		// User has called snapshot.SetRPCInterceptor() to explicitly set an interceptor, we

@@ -94,7 +94,7 @@ func BoTiKVRPC() *BackoffConfig {
 
 // NewGcResolveLockMaxBackoffer creates a Backoffer for Gc to resolve lock.
 func NewGcResolveLockMaxBackoffer(ctx context.Context) *Backoffer {
-	return retry.NewBackofferWithVars(ctx, gcResolveLockMaxBackoff, nil)
+	return retry.NewBackofferWithVars(ctx, gcResolveLockMaxBackoff, nil) // 100000
 }
 
 // NewNoopBackoff create a Backoffer do nothing just return error directly

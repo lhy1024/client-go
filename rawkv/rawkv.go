@@ -272,7 +272,7 @@ func (c *Client) BatchGet(ctx context.Context, keys [][]byte, options ...RawOpti
 	}()
 
 	opts := c.getRawKVOptions(options...)
-	bo := retry.NewBackofferWithVars(ctx, rawkvMaxBackoff, nil)
+	bo := retry.NewBackofferWithVars(ctx, rawkvMaxBackoff, nil) // 20000
 	resp, err := c.sendBatchReq(bo, keys, opts, tikvrpc.CmdRawBatchGet)
 	if err != nil {
 		return nil, err
@@ -388,7 +388,7 @@ func (c *Client) BatchPutWithTTL(ctx context.Context, keys, values [][]byte, ttl
 	if len(ttls) > 0 && len(keys) != len(ttls) {
 		return errors.New("the len of ttls is not equal to the len of values")
 	}
-	bo := retry.NewBackofferWithVars(ctx, rawkvMaxBackoff, nil)
+	bo := retry.NewBackofferWithVars(ctx, rawkvMaxBackoff, nil) // 20000
 	opts := c.getRawKVOptions(options...)
 	err := c.sendBatchPut(bo, keys, values, ttls, opts)
 	return err
@@ -427,7 +427,7 @@ func (c *Client) BatchDelete(ctx context.Context, keys [][]byte, options ...RawO
 		metrics.RawkvCmdHistogramWithBatchDelete.Observe(time.Since(start).Seconds())
 	}()
 
-	bo := retry.NewBackofferWithVars(ctx, rawkvMaxBackoff, nil)
+	bo := retry.NewBackofferWithVars(ctx, rawkvMaxBackoff, nil) // 20000
 	opts := c.getRawKVOptions(options...)
 	resp, err := c.sendBatchReq(bo, keys, opts, tikvrpc.CmdRawBatchDelete)
 	if err != nil {
@@ -657,7 +657,7 @@ func (c *Client) CompareAndSwap(ctx context.Context, key, previousValue, newValu
 }
 
 func (c *Client) sendReq(ctx context.Context, key []byte, req *tikvrpc.Request, reverse bool) (*tikvrpc.Response, *locate.KeyLocation, error) {
-	bo := retry.NewBackofferWithVars(ctx, rawkvMaxBackoff, nil)
+	bo := retry.NewBackofferWithVars(ctx, rawkvMaxBackoff, nil) // 20000
 	sender := locate.NewRegionRequestSender(c.regionCache, c.rpcClient)
 	for {
 		var loc *locate.KeyLocation
@@ -801,7 +801,7 @@ func (c *Client) doBatchReq(bo *retry.Backoffer, batch kvrpc.Batch, options *raw
 // We can't use sendReq directly, because we need to know the end of the region before we send the request
 // TODO: Is there any better way to avoid duplicating code with func `sendReq` ?
 func (c *Client) sendDeleteRangeReq(ctx context.Context, startKey []byte, endKey []byte, opts *rawOptions) (*tikvrpc.Response, []byte, error) {
-	bo := retry.NewBackofferWithVars(ctx, rawkvMaxBackoff, nil)
+	bo := retry.NewBackofferWithVars(ctx, rawkvMaxBackoff, nil) // 20000
 	sender := locate.NewRegionRequestSender(c.regionCache, c.rpcClient)
 	for {
 		loc, err := c.regionCache.LocateKey(bo, startKey)

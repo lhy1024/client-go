@@ -61,7 +61,7 @@ func NewClient(pdAddrs []string) (*Client, error) {
 
 // GetTimestamp returns the current global timestamp.
 func (c *Client) GetTimestamp(ctx context.Context) (uint64, error) {
-	bo := retry.NewBackofferWithVars(ctx, transaction.TsoMaxBackoff, nil)
+	bo := retry.NewBackofferWithVars(ctx, transaction.TsoMaxBackoff, nil) // 15000
 	startTS, err := c.GetTimestampWithRetry(bo, oracle.GlobalTxnScope)
 	if err != nil {
 		return 0, err

@@ -570,7 +570,7 @@ func (txn *KVTxn) rollbackPessimisticLocks() error {
 		return nil
 	}
 	ctx := context.WithValue(context.Background(), util.RequestSourceKey, *txn.RequestSource)
-	bo := retry.NewBackofferWithVars(ctx, cleanupMaxBackoff, txn.vars)
+	bo := retry.NewBackofferWithVars(ctx, cleanupMaxBackoff, txn.vars) // 20000
 	if txn.interceptor != nil {
 		// User has called txn.SetRPCInterceptor() to explicitly set an interceptor, we
 		// need to bind it to ctx so that the internal client can perceive and execute
@@ -639,7 +639,7 @@ func (txn *KVTxn) onCommitted(err error) {
 func (txn *KVTxn) LockKeysWithWaitTime(ctx context.Context, lockWaitTime int64, keysInput ...[]byte) (err error) {
 	forUpdateTs := txn.startTS
 	if txn.IsPessimistic() {
-		bo := retry.NewBackofferWithVars(context.Background(), TsoMaxBackoff, nil)
+		bo := retry.NewBackofferWithVars(context.Background(), TsoMaxBackoff, nil) // 15000
 		forUpdateTs, err = txn.store.GetTimestampWithRetry(bo, txn.scope)
 		if err != nil {
 			return err
@@ -997,7 +997,7 @@ func (txn *KVTxn) lockKeys(ctx context.Context, lockCtx *tikv.LockCtx, fn func()
 			LockKeys:    int32(len(keys)),
 			ResolveLock: util.ResolveLockDetail{},
 		}
-		bo := retry.NewBackofferWithVars(ctx, pessimisticLockMaxBackoff, txn.vars)
+		bo := retry.NewBackofferWithVars(ctx, pessimisticLockMaxBackoff, txn.vars) // 20000
 		// If the number of keys greater than 1, it can be on different region,
 		// concurrently execute on multiple regions may lead to deadlock.
 		txn.committer.isFirstLock = txn.lockedCnt == 0 && len(keys) == 1
@@ -1244,7 +1244,7 @@ func (txn *KVTxn) asyncPessimisticRollback(ctx context.Context, keys [][]byte, s
 			}
 		}
 
-		err := committer.pessimisticRollbackMutations(retry.NewBackofferWithVars(ctx, pessimisticRollbackMaxBackoff, txn.vars), &PlainMutations{keys: keys})
+		err := committer.pessimisticRollbackMutations(retry.NewBackofferWithVars(ctx, pessimisticRollbackMaxBackoff, txn.vars), &PlainMutations{keys: keys}) // 20000
 		if err != nil {
 			logutil.Logger(ctx).Warn("[kv] pessimisticRollback failed.", zap.Error(err))
 		}
