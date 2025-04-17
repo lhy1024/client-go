@@ -2282,7 +2282,7 @@ func formatRegionsHex(regions []*router.Region) string {
 			fmt.Fprintf(&b, "{nil}")
 			continue
 		}
-		fmt.Fprintf(&b, "{id:%q start:%q end:%q}", r.Meta.Id, redact.Key(r.Meta.StartKey), redact.Key(r.Meta.EndKey))
+		fmt.Fprintf(&b, "{id:%v start:%q end:%q}", r.Meta.Id, redact.Key(r.Meta.StartKey), redact.Key(r.Meta.EndKey))
 	}
 	return b.String()
 }
@@ -2379,15 +2379,23 @@ func regionsHaveGapInRanges(ranges []router.KeyRange, regionsInfo []*router.Regi
 		return false
 	}
 	if len(regionsInfo) == 0 {
+		logutil.BgLogger().Info("[regionsHaveGapInRanges] the regionsInfo is empty")
 		return true
 	}
 	checkIdx := 0                  // checked index of ranges
 	checkKey := ranges[0].StartKey // checked key of ranges
 	for _, r := range regionsInfo {
 		if r.Meta == nil {
+			logutil.BgLogger().Info("[regionsHaveGapInRanges] the region meta is nil",
+				zap.String("start-key", redact.Key(r.Meta.StartKey)),
+				zap.String("end-key", redact.Key(r.Meta.EndKey)))
 			return true
 		}
 		if bytes.Compare(r.Meta.StartKey, checkKey) > 0 {
+			logutil.BgLogger().Info("[regionsHaveGapInRanges] the start_key of returned region is greater than check key",
+				zap.String("start-key", redact.Key(r.Meta.StartKey)),
+				zap.String("check-key", redact.Key(checkKey)),
+				zap.String("end-key", redact.Key(r.Meta.EndKey)))
 			// there is a gap between returned region's start_key and current check key
 			return true
 		}
@@ -2409,18 +2417,27 @@ func regionsHaveGapInRanges(ranges []router.KeyRange, regionsInfo []*router.Regi
 			checkKey = ranges[checkIdx].StartKey
 		}
 	}
-	if limit > 0 && len(regionsInfo) == limit {
+	if limit > 0 && len(regionsInfo) >= limit {
 		// the regionsInfo is limited by the limit, so there may be some ranges not covered.
 		// But the previous regions are continuous, so we just need to check the rest ranges.
+		logutil.BgLogger().Info("[regionsHaveGapInRanges] limit is less to len(regionsInfo)",
+			zap.Int("limit", limit), zap.Int("len-regions", len(regionsInfo)))
 		return false
 	}
+	logutil.BgLogger().Info("[regionsHaveGapInRanges] limit is not less to len(regionsInfo)",
+		zap.Int("limit", limit), zap.Int("len-regions", len(regionsInfo)))
 	if checkIdx < len(ranges)-1 {
 		// there are still some ranges not covered.
+		logutil.BgLogger().Info("[regionsHaveGapInRanges] the last region end_key is not empty, so there are still some ranges not covered",
+			zap.String("last-region-end-key", redact.Key(ranges[checkIdx].EndKey)),
+			zap.String("last-region-start-key", redact.Key(ranges[checkIdx].StartKey)),
+			zap.String("check-key", redact.Key(checkKey)))
 		return true
 	}
 	if len(checkKey) == 0 {
 		return false
 	} else if len(ranges[checkIdx].EndKey) == 0 {
+		logutil.BgLogger().Info("[regionsHaveGapInRanges] the last region end_key is empty, so all ranges are covered")
 		return true
 	}
 	return bytes.Compare(checkKey, ranges[checkIdx].EndKey) < 0
