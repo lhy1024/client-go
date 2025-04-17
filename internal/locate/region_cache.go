@@ -2260,6 +2260,33 @@ func (c *RegionCache) scanRegions(bo *retry.Backoffer, startKey, endKey []byte, 
 	}
 }
 
+func formatKeyRangesHex(keyRanges []router.KeyRange) string {
+	var b strings.Builder
+	for i, kr := range keyRanges {
+		if i > 0 {
+			b.WriteString(", ")
+		}
+		start, end := kr.EscapeAsHexStr()
+		fmt.Fprintf(&b, "{start:%q end:%q}", start, end)
+	}
+	return b.String()
+}
+
+func formatRegionsHex(regions []*router.Region) string {
+	var b strings.Builder
+	for i, r := range regions {
+		if i > 0 {
+			b.WriteString(", ")
+		}
+		if r == nil || r.Meta == nil {
+			fmt.Fprintf(&b, "{nil}")
+			continue
+		}
+		fmt.Fprintf(&b, "{id:%q start:%q end:%q}", r.Meta.Id, redact.Key(r.Meta.StartKey), redact.Key(r.Meta.EndKey))
+	}
+	return b.String()
+}
+
 // batchScanRegions scans at most `limit` regions from PD, starts from the region containing `startKey` and in key order.
 func (c *RegionCache) batchScanRegions(bo *retry.Backoffer, keyRanges []router.KeyRange, limit int, opts ...BatchLocateKeyRangesOpt) ([]*Region, error) {
 	if limit == 0 || len(keyRanges) == 0 {
@@ -2320,9 +2347,11 @@ func (c *RegionCache) batchScanRegions(bo *retry.Backoffer, keyRanges []router.K
 			continue
 		}
 		if regionsHaveGapInRanges(keyRanges, regionsInfo, limit) {
+			keyRangesStr := formatKeyRangesHex(keyRanges)
+			regionsStr := formatRegionsHex(regionsInfo)
 			backoffErr = errors.Errorf(
-				"PD returned regions have gaps, range num: %d, limit: %d",
-				len(keyRanges), limit,
+				"PD returned regions have gaps, range num: %d, limit: %d, keyRanges: %s, regions: %s",
+				len(keyRanges), limit, keyRangesStr, regionsStr,
 			)
 			continue
 		}
